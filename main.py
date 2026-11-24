@@ -9,6 +9,7 @@ clock. The entry is the joke at CANDIDATES[SELECTED], written to
 """
 
 import os
+import sys
 
 CANDIDATES = [
     # 0 — The standup that outlasts a career: escalation as the punchline.
@@ -45,8 +46,21 @@ def main() -> None:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "entry.txt")
+    expected = joke + "\n"
     with open(path, "w", encoding="utf-8") as f:
-        f.write(joke + "\n")
+        f.write(expected)
+    # Read-back verification: the file on disk must match the intended
+    # entry byte for byte, so a truncated or corrupted write fails loudly
+    # instead of silently submitting the wrong text.
+    with open(path, "r", encoding="utf-8") as f:
+        written = f.read()
+    if written != expected:
+        print(
+            f"error: read-back mismatch in {path}: "
+            f"wrote {expected!r}, read {written!r}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     print(joke)
 
 
